@@ -19,27 +19,8 @@ public class StudentService {
         return repository.save(student);
     }
 
-    public Student update(Long id, Student updatedStudent) {
-        Student existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-
-        existing.setName(updatedStudent.getName());
-        existing.setPhoneNumber(updatedStudent.getPhoneNumber());
-
-        return repository.save(existing);
-    }
-
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
-
     public List<Student> getAll() {
         return repository.findAll();
-    }
-
-    public Student getById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
     public Student getByPhoneNumber(String phoneNumber) {
