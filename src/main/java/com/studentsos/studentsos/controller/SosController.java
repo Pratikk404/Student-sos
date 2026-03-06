@@ -1,6 +1,6 @@
 package com.studentsos.studentsos.controller;
 
-import com.studentsos.studentsos.entity.SosRequest;
+import com.studentsos.studentsos.dto.SosRequestDTO;
 import com.studentsos.studentsos.service.SosService;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +15,11 @@ public class SosController {
     }
 
     @PostMapping("/{phoneNumber}")
-    public SosRequest createSos(@PathVariable String phoneNumber) {
-        return service.createSos(phoneNumber);
+    public SosRequestDTO createSos(
+            @PathVariable String phoneNumber,
+            @RequestParam String item,
+            @RequestParam String location) {
+
+        return service.createSos(phoneNumber, item, location);
     }
 }

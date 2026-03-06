@@ -25,7 +25,7 @@ public class Student {
     private String phoneNumber;
 
     @Column(nullable = false)
-    private Integer karma = 50;
+    private Integer karma = 100;
 
     @Version
     private Long version;

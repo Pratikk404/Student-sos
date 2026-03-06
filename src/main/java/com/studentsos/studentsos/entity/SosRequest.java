@@ -23,7 +23,4 @@ public class SosRequest {
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
-
-    @Column(nullable = false)
-    private String status; // PENDING, RESOLVED
 }

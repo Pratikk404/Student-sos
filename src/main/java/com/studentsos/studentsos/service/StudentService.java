@@ -1,10 +1,12 @@
 package com.studentsos.studentsos.service;
 
+import com.studentsos.studentsos.dto.StudentDTO;
 import com.studentsos.studentsos.entity.Student;
 import com.studentsos.studentsos.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -15,16 +17,39 @@ public class StudentService {
         this.repository = repository;
     }
 
-    public Student create(Student student) {
-        return repository.save(student);
+    public StudentDTO create(Student student) {
+        Student saved = repository.save(student);
+        return mapToDTO(saved);
     }
 
-    public List<Student> getAll() {
-        return repository.findAll();
+    public List<StudentDTO> getAll() {
+        return repository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
-    public Student getByPhoneNumber(String phoneNumber) {
-        return repository.findByPhoneNumber(phoneNumber)
+    public StudentDTO getByPhoneNumber(String phoneNumber) {
+
+        Student student = repository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return mapToDTO(student);
+    }
+
+    public List<StudentDTO> getLeaderboard() {
+        return repository.findAllByOrderByKarmaDesc()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private StudentDTO mapToDTO(Student student) {
+        return new StudentDTO(
+                student.getId(),
+                student.getName(),
+                student.getPhoneNumber(),
+                student.getKarma()
+        );
     }
 }

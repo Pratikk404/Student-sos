@@ -1,5 +1,6 @@
 package com.studentsos.studentsos.service;
 
+import com.studentsos.studentsos.dto.SosRequestDTO;
 import com.studentsos.studentsos.entity.SosRequest;
 import com.studentsos.studentsos.entity.Student;
 import com.studentsos.studentsos.repository.SosRepository;
@@ -13,22 +14,37 @@ public class SosService {
 
     private final SosRepository sosRepository;
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
 
-    public SosService(SosRepository sosRepository, StudentRepository studentRepository) {
+    public SosService(SosRepository sosRepository,
+                      StudentRepository studentRepository,
+                      NotificationService notificationService) {
         this.sosRepository = sosRepository;
         this.studentRepository = studentRepository;
+        this.notificationService = notificationService;
     }
 
-    public SosRequest createSos(String phoneNumber) {
+    public SosRequestDTO createSos(String phoneNumber, String item, String location) {
 
         Student student = studentRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        student.setKarma(student.getKarma() - 5);
+        studentRepository.save(student);
+
         SosRequest sos = new SosRequest();
         sos.setStudent(student);
         sos.setTimestamp(LocalDateTime.now());
-        sos.setStatus("PENDING");
 
-        return sosRepository.save(sos);
+        SosRequest saved = sosRepository.save(sos);
+
+        notificationService.broadcastSOS(student.getName(), item, location);
+
+        return new SosRequestDTO(
+                saved.getId(),
+                student.getId(),
+                student.getName(),
+                saved.getTimestamp()
+        );
     }
 }
