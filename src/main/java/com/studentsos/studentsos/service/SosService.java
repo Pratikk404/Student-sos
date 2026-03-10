@@ -8,6 +8,7 @@ import com.studentsos.studentsos.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class SosService {
@@ -29,6 +30,12 @@ public class SosService {
         Student student = studentRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        // Prevent sending SOS if karma too low
+        if (student.getKarma() < 5) {
+            throw new RuntimeException("Not enough karma to send SOS");
+        }
+
+        // Deduct karma
         student.setKarma(student.getKarma() - 5);
         studentRepository.save(student);
 
@@ -38,13 +45,26 @@ public class SosService {
 
         SosRequest saved = sosRepository.save(sos);
 
+        // Send real-time alert
         notificationService.broadcastSOS(student.getName(), item, location);
 
+        return mapToDTO(saved);
+    }
+
+    public List<SosRequestDTO> getAllRequests() {
+
+        return sosRepository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    private SosRequestDTO mapToDTO(SosRequest sos) {
         return new SosRequestDTO(
-                saved.getId(),
-                student.getId(),
-                student.getName(),
-                saved.getTimestamp()
+                sos.getId(),
+                sos.getStudent().getId(),
+                sos.getStudent().getName(),
+                sos.getTimestamp()
         );
     }
 }
