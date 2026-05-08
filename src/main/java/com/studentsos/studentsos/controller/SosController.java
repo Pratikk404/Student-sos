@@ -5,7 +5,7 @@ import com.studentsos.studentsos.service.SosService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/sos")
 public class SosController {
