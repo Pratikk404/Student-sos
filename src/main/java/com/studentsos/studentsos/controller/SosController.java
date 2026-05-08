@@ -4,6 +4,8 @@ import com.studentsos.studentsos.dto.SosRequestDTO;
 import com.studentsos.studentsos.service.SosService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/sos")
 public class SosController {
@@ -21,5 +23,10 @@ public class SosController {
             @RequestParam String location) {
 
         return service.createSos(phoneNumber, item, location);
+    }
+
+    @GetMapping
+    public List<SosRequestDTO> getAllRequests() {
+        return service.getAllRequests();
     }
 }
