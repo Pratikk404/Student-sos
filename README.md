@@ -1,123 +1,269 @@
-# Student-SOS 🚨
+# 🚨 Student-SOS
 
-A real-time campus emergency request system that allows students to send SOS alerts when they urgently need essential items during exams or practical sessions.
-
-## ✨ Key Features
-
-📡 **Real-time SOS Alerts** | 📱 **Phone-based Student Identity** | 🧮 **Karma Discipline System** | 🏆 **Leaderboard**
-
-* Student registration using phone number
-* SOS request creation
-* Karma deduction when SOS is triggered
-* Leaderboard based on remaining karma
-* Real-time SOS broadcast using WebSockets
-* MySQL database persistence
-* Clean layered Spring Boot architecture
+A real-time campus emergency request system that allows students to instantly broadcast SOS alerts when they urgently need essential items during exams, practicals, or class sessions.
 
 ---
 
-## 🏗️ Tech Stack
+# ✨ Features
 
-| Component      | Technology           |
-| -------------- | -------------------- |
-| **Backend**    | Spring Boot, Java 17 |
-| **Database**   | MySQL, JPA/Hibernate |
-| **Realtime**   | Spring WebSocket     |
-| **Build Tool** | Maven                |
-| **Port**       | 8080                 |
+- 📡 Real-time SOS broadcasting using WebSocket (STOMP over SockJS)
+- 📱 Phone-number-based identity system with zero password friction
+- 🧮 Karma discipline system where each SOS costs 5 karma points
+- 🏆 Live leaderboard ranking students by remaining karma
+- 🗂️ Persistent SOS history stored in MySQL
+- 👥 Student directory with karma standings
+- 🔒 Optimistic locking using `@Version` for safe concurrent updates
 
 ---
 
-## 🚀 Quick Start
+# 🏗️ Tech Stack
 
-### Prerequisites
+| Layer | Technology |
+|---|---|
+| Backend | Java 17, Spring Boot |
+| Database | MySQL, Spring Data JPA, Hibernate |
+| Real-Time Communication | Spring WebSocket, STOMP, SockJS |
+| Concurrency Handling | JPA Optimistic Locking (`@Version`) |
+| Build Tool | Maven |
+| Frontend | HTML, CSS, JavaScript |
 
-```
-Java 17+ | MySQL Server | Maven
-```
+---
 
-### Setup
+# 🚀 Quick Start
+
+## Prerequisites
+
+- Java 17+
+- MySQL Server
+- Maven
+
+---
+
+## Setup
+
+### 1. Clone Repository
 
 ```bash
-# 1. Clone repository
 git clone <repo-url>
 cd studentsos
+```
 
-# 2. Create database
-mysql -u root -p
-> CREATE DATABASE studentsos;
+### 2. Create Database
 
-# 3. Configure database
-Update src/main/resources/application.properties
+```sql
+CREATE DATABASE studentsos;
+```
 
+### 3. Configure `application.properties`
+
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/studentsos
 spring.datasource.username=root
 spring.datasource.password=your_password
 
-# 4. Build and run
-mvn clean package
-mvn spring-boot:run
+spring.jpa.hibernate.ddl-auto=update
+```
 
-# 5. Server runs at
+### 4. Run Backend
+
+```bash
+mvn spring-boot:run
+```
+
+Backend will start at:
+
+```text
 http://localhost:8080
 ```
 
----
+### 5. Launch Frontend
 
-## 📡 Core API
+Open:
 
-| Endpoint                  | Method | Description                   |
-| ------------------------- | ------ | ----------------------------- |
-| `/students`               | POST   | Register a student            |
-| `/students`               | GET    | Fetch all students            |
-| `/students/phone/{phone}` | GET    | Fetch student by phone        |
-| `/sos`                    | POST   | Trigger SOS request           |
-| `/leaderboard`            | GET    | View students ranked by karma |
-
----
-
-## 📊 Data Models
-
-| Entity      | Fields                                  |
-| ----------- | --------------------------------------- |
-| **Student** | id, name, phoneNumber, karma            |
-| **SOS**     | id, studentId, itemRequested, timestamp |
-
----
-
-## 📂 Project Structure
-
+```text
+index.html
 ```
+
+directly in the browser.
+
+No frontend server required.
+
+---
+
+# 📡 API Reference
+
+## Student APIs
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/students` | POST | Register new student |
+| `/students` | GET | Get all students |
+| `/students/phone/{phone}` | GET | Get student by phone number |
+| `/students/leaderboard` | GET | Get students ranked by karma |
+
+---
+
+## SOS APIs
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/sos/{phoneNumber}?item=&location=` | POST | Trigger SOS and deduct karma |
+| `/sos` | GET | Retrieve all SOS requests |
+
+---
+
+# 📡 WebSocket Configuration
+
+| Property | Value |
+|---|---|
+| Endpoint | `/ws` |
+| Protocol | STOMP over SockJS |
+| Topic Subscription | `/topic/sos` |
+| Payload Format | Plain Text |
+
+---
+
+# 📊 Data Models
+
+## Student Entity
+
+| Field | Type | Description |
+|---|---|---|
+| id | Long | Auto-generated primary key |
+| name | String | Required |
+| phoneNumber | String | Unique 10-digit number |
+| karma | Integer | Default value: `100` |
+| version | Long | Optimistic locking field |
+
+---
+
+## SosRequest Entity
+
+| Field | Type | Description |
+|---|---|---|
+| id | Long | Auto-generated primary key |
+| student | Student | Foreign key reference |
+| timestamp | LocalDateTime | Automatically generated |
+
+> `item` and `location` are intentionally not persisted in the entity.
+> They are passed as request parameters and broadcast through WebSocket in real time.
+
+---
+
+# 📂 Project Structure
+
+```text
 studentsos/
-├── src/main/java/com/studentsos/
-│   ├── controller/        (StudentController, SOSController)
-│   ├── service/           (StudentService, SOSService, NotificationService)
-│   ├── repository/        (StudentRepository, SOSRepository)
-│   ├── entity/            (Student, SOS)
-│   ├── config/            (WebSocketConfig)
+│
+├── src/main/java/com/studentsos/studentsos/
+│   ├── config/
+│   │   └── WebSocketConfig.java
+│   │
+│   ├── controller/
+│   │   ├── StudentController.java
+│   │   └── SosController.java
+│   │
+│   ├── dto/
+│   │   ├── StudentDTO.java
+│   │   └── SosRequestDTO.java
+│   │
+│   ├── entity/
+│   │   ├── Student.java
+│   │   └── SosRequest.java
+│   │
+│   ├── repository/
+│   │   ├── StudentRepository.java
+│   │   └── SosRepository.java
+│   │
+│   ├── service/
+│   │   ├── StudentService.java
+│   │   ├── SosService.java
+│   │   └── NotificationService.java
+│   │
 │   └── StudentsosApplication.java
 │
 ├── src/main/resources/
 │   └── application.properties
 │
-├── pom.xml
-└── README.md
+├── index.html
+└── pom.xml
 ```
 
 ---
 
-## ⚡ System Logic
+# ⚡ System Logic
 
-* Each student has **karma points**
-* When a student **triggers an SOS**, karma **decreases**
-* Students who rarely trigger SOS maintain **higher karma**
-* The **leaderboard ranks students by remaining karma**
-* SOS requests are **broadcast instantly via WebSockets**
+```text
+Student Registers
+      │
+      ▼
+Initial Karma = 100
+      │
+      ▼
+Student Sends SOS
+      │
+      ├── If karma < 5
+      │       → Request Rejected
+      │
+      └── If karma ≥ 5
+              → Deduct 5 Karma
+              → Save SOS Record
+              → Broadcast Alert via WebSocket
+```
+
+All connected clients instantly receive the SOS notification.
+
+Leaderboard rankings automatically update based on remaining karma.
 
 ---
 
-## 🎯 Workflow
+# 🎯 Workflow
 
-Student registers → Logs into system → Presses **SOS** when item is needed →
-System deducts karma → SOS alert is broadcast to other students →
-Leaderboard reflects student discipline based on karma.
+```text
+Register
+   ↓
+Login
+   ↓
+Enter Item + Location
+   ↓
+Broadcast SOS
+   ↓
+5 Karma Deducted
+   ↓
+SOS Stored in MySQL
+   ↓
+Real-Time WebSocket Broadcast
+   ↓
+All Connected Students Receive Alert
+```
+
+---
+
+# 🧠 Core Design Concepts
+
+- Karma functions as a natural rate limiter
+- No admin moderation required
+- Optimistic locking prevents lost concurrent updates
+- Real-time communication minimizes response delay
+- Minimal-friction authentication improves usability during emergencies
+
+---
+
+# 🔮 Future Scope
+
+- ✅ Lender acceptance workflow
+- ✅ Karma rewards for successful fulfillment
+- ✅ SOS auto-expiry using Spring `@Scheduled`
+- ✅ Urgency levels (Low / Medium / High)
+- ✅ SMS fallback notifications
+- ✅ Android / iOS mobile application
+
+---
+
+# 👥 Team
+
+Built as a Semester IV Mini Project  
+Department of Computer Engineering  
+University of Mumbai
+
+---
